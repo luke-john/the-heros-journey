@@ -5,23 +5,28 @@ import {
 import { runJourney } from "../src/run-scripts.mjs";
 
 runJourney({
-  journeyInputKey: "commit",
-  inputs: [
-    { commit: "b4858938837dd6a04e289c244d9134ca624f1bd7" },
-    { commit: "604bb7d32dfa87bc10e18093e7b903ce7ae19a65" },
-  ],
+  journeyInputKey: "commitHash",
+  inputs: [{ commitHash: "7344103589a6" }],
   browsersToRunOn: ["chromium", "firefox"],
-  // playwrightLaunchOptions: { headless: false },
+  playwrightLaunchOptions: { headless: false },
   // diffOptions: { traceDir: `${process.cwd()}/traced` },
-  async journey({ page, input: { commit } }) {
-    await page.goto(`http://localhost:5173/?commit=${commit}`);
+  async journey({ page, input: { commitHash } }) {
+    await page.goto(
+      `https://statlas.prod.atl-paas.net/atlassian-frontend/${commitHash}/examples.html?groupId=editor&packageId=editor-core&exampleId=kitchen-sink&mode=none`
+    );
 
-    // await page.pause();
-    await page.locator("textarea").click();
+    // Click p:has-text("Type something here, and watch it render to the side!")
+    await page.locator('[aria-label="Editable content"] p').click();
+    console.log("1");
 
-    await page.keyboard.type("Hello");
+    await page.type('[aria-label="Editable content"] p', "Hello", {
+      delay: 100,
+    });
+    console.log("2");
 
-    return { commit };
+    await page.pause();
+
+    return { commitHash };
   },
   postProcessJourneyTrace: postProcessJourneyTraceHelper(async (props) => {
     for (const traceEvent of props.traceEvents) {
